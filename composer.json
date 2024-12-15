@@ -1,0 +1,45 @@
+{
+  "name": "arraypress/geodistance",
+  "version": "1.0.0",
+  "description": "A PHP utility class for calculating geographical distances between coordinates using the Haversine formula",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://github.com/arraypress/geodistance/",
+  "authors": [
+    {
+      "name": "David Sherlock",
+      "homepage": "https://arraypress.com/"
+    }
+  ],
+  "require": {
+    "php": ">=7.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "ArrayPress\\Utils\\Math\\": "src/"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "support": {
+    "issues": "https://github.com/arraypress/geodistance/issues",
+    "source": "https://github.com/arraypress/geodistance"
+  },
+  "keywords": [
+    "geodistance",
+    "haversine",
+    "coordinates",
+    "distance-calculator",
+    "geographical-distance",
+    "gps-coordinates",
+    "latitude-longitude",
+    "distance-calculation",
+    "geographical-utilities",
+    "mathematical-utilities",
+    "php-geodistance",
+    "distance-measurement"
+  ]
+}
