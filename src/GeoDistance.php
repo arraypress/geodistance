@@ -216,6 +216,42 @@ class GeoDistance {
 	}
 
 	/**
+	 * Check if a given point is within a specified radius
+	 *
+	 * @param array $point  Array with 'latitude' and 'longitude' keys
+	 * @param float $radius Radius in the current unit of measurement
+	 *
+	 * @return bool|\WP_Error Whether the point is within the radius, or WP_Error on failure in WordPress
+	 * @throws InvalidArgumentException If coordinates are invalid in non-WordPress environment
+	 */
+	public function is_within_radius( array $point, float $radius ): bool {
+		// Validate the point coordinates
+		$validation = $this->validate_coordinates( $point, 'Target point' );
+		if ( $validation !== true ) {
+			return $validation;
+		}
+
+		// Store current point B
+		$originalPointB = $this->pointB;
+
+		// Set the target point as point B
+		$this->set_point_b( $point );
+
+		// Calculate distance
+		$distance = $this->get_distance();
+
+		// Restore original point B
+		$this->pointB = $originalPointB;
+
+		// If distance is a WP_Error, return false
+		if ( is_wp_error( $distance ) ) {
+			return false;
+		}
+
+		return $distance <= $radius;
+	}
+
+	/**
 	 * Get the last error if any
 	 *
 	 * @return \WP_Error|InvalidArgumentException|null
