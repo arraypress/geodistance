@@ -91,6 +91,40 @@ try {
 }
 ```
 
+### Checking if a Point is Within Radius
+
+```php
+// Central Park, New York
+$centralPoint = [ 'latitude' => 40.7829, 'longitude' => -73.9654 ];
+
+// Times Square coordinates
+$targetPoint = [ 'latitude' => 40.7580, 'longitude' => -73.9855 ];
+
+// Initialize calculator with central point
+$calculator = new GeoDistance( $centralPoint, $targetPoint );
+
+// WordPress Environment
+$radius = 2; // 2 miles radius
+$isWithin = $calculator->is_within_radius( $targetPoint, $radius );
+if ( is_wp_error( $isWithin ) ) {
+    echo $isWithin->get_error_message();
+} else {
+    echo $isWithin ? "Location is within {$radius} {$calculator->get_unit()} radius" : "Location is outside radius";
+}
+
+// Non-WordPress Environment
+try {
+    $radius = 2; // 2 miles radius
+    if ( $calculator->is_within_radius( $targetPoint, $radius ) ) {
+        echo "Location is within {$radius} {$calculator->get_unit()} radius";
+    } else {
+        echo "Location is outside radius";
+    }
+} catch ( InvalidArgumentException $e ) {
+    echo "Error: " . $e->getMessage();
+}
+```
+
 ## Unit Management
 
 ### Getting and Setting Units
