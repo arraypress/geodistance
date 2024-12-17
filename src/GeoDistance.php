@@ -16,7 +16,7 @@
  * $distance = $calculator->get_distance();
  * ```
  *
- * @package     ArrayPress/Utils
+ * @package     ArrayPress\Utils\Math
  * @copyright   Copyright (c) 2024, ArrayPress Limited
  * @license     GPL2+
  * @version     1.0.0
