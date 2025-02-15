@@ -16,7 +16,7 @@ A powerful PHP utility class for calculating geographical distances between coor
 ## Requirements
 
 - PHP 7.4 or later
-- Optional: WordPress (for WP_Error integration)
+- WordPress
 
 ## Installation
 
@@ -40,20 +40,11 @@ $pointB = [ 'latitude' => 51.5074, 'longitude' => -0.1278 ];
 // Initialize calculator
 $calculator = new GeoDistance( $pointA, $pointB );
 
-// WordPress Environment
 $distance = $calculator->get_distance();
 if ( is_wp_error( $distance ) ) {
     echo $distance->get_error_message();
 } else {
     echo "Distance: $distance {$calculator->get_unit()}";
-}
-
-// Non-WordPress Environment
-try {
-    $distance = $calculator->get_distance();
-    echo "Distance: $distance {$calculator->get_unit()}";
-} catch ( InvalidArgumentException $e ) {
-    echo "Error: " . $e->getMessage();
 }
 ```
 
@@ -79,16 +70,6 @@ $result = $calculator->set_point_a([
 if ( is_wp_error( $result ) ) {
     echo $result->get_error_message();
 }
-
-// Non-WordPress Environment
-try {
-    $calculator->set_point_b([
-        'latitude'  => -33.8688,
-        'longitude' => 151.2093
-    ]);
-} catch ( InvalidArgumentException $e ) {
-    echo "Error: " . $e->getMessage();
-}
 ```
 
 ### Checking if a Point is Within Radius
@@ -111,18 +92,6 @@ if ( is_wp_error( $isWithin ) ) {
 } else {
     echo $isWithin ? "Location is within {$radius} {$calculator->get_unit()} radius" : "Location is outside radius";
 }
-
-// Non-WordPress Environment
-try {
-    $radius = 2; // 2 miles radius
-    if ( $calculator->is_within_radius( $targetPoint, $radius ) ) {
-        echo "Location is within {$radius} {$calculator->get_unit()} radius";
-    } else {
-        echo "Location is outside radius";
-    }
-} catch ( InvalidArgumentException $e ) {
-    echo "Error: " . $e->getMessage();
-}
 ```
 
 ## Unit Management
@@ -137,13 +106,6 @@ $currentUnit = $calculator->get_unit();
 $result = $calculator->set_unit( 'km' );
 if ( is_wp_error( $result ) ) {
     echo $result->get_error_message();
-}
-
-// Non-WordPress Environment
-try {
-    $calculator->set_unit('mi');
-} catch ( InvalidArgumentException $e ) {
-    echo "Error: " . $e->getMessage();
 }
 ```
 
@@ -165,17 +127,6 @@ if ( is_wp_error( $result ) ) {
 $lastError = $calculator->get_last_error();
 if ( $lastError instanceof WP_Error ) {
     echo $lastError->get_error_message();
-}
-```
-
-### Non-WordPress Environment
-
-```php
-try {
-    $calculator = new GeoDistance( $pointA, $pointB );
-    $calculator->set_unit( 'invalid_unit' );
-} catch ( InvalidArgumentException $e ) {
-    echo "Error: " . $e->getMessage();
 }
 ```
 

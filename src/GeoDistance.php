@@ -4,7 +4,7 @@
  *
  * A simple utility class for calculating distances between two geographical points
  * using the Haversine formula. Supports calculations in miles and kilometers.
- * Includes WordPress integration for error handling when in a WordPress environment.
+ * Integrated with WordPress error handling.
  *
  * Example usage:
  * ```php
@@ -27,7 +27,7 @@ declare( strict_types=1 );
 
 namespace ArrayPress\Utils\Math;
 
-use InvalidArgumentException;
+use WP_Error;
 
 class GeoDistance {
 
@@ -55,9 +55,9 @@ class GeoDistance {
 	/**
 	 * Store the last error
 	 *
-	 * @var \WP_Error|InvalidArgumentException|null
+	 * @var WP_Error|null
 	 */
-	private $last_error = null;
+	private ?WP_Error $last_error = null;
 
 	/**
 	 * Valid units and their Earth radius values
@@ -76,21 +76,21 @@ class GeoDistance {
 	 * @param array  $pointB Array with 'latitude' and 'longitude' keys
 	 * @param string $unit   Unit of measurement ('mi' or 'km')
 	 *
-	 * @throws InvalidArgumentException If coordinates are invalid in non-WordPress environment
+	 * @return void|WP_Error
 	 */
 	public function __construct( array $pointA, array $pointB, string $unit = 'mi' ) {
 		$validation = $this->validate_coordinates( $pointA, 'Point A' );
-		if ( $validation !== true ) {
+		if ( is_wp_error( $validation ) ) {
 			return $validation;
 		}
 
 		$validation = $this->validate_coordinates( $pointB, 'Point B' );
-		if ( $validation !== true ) {
+		if ( is_wp_error( $validation ) ) {
 			return $validation;
 		}
 
 		$validation = $this->validate_unit( $unit );
-		if ( $validation !== true ) {
+		if ( is_wp_error( $validation ) ) {
 			return $validation;
 		}
 
@@ -104,12 +104,11 @@ class GeoDistance {
 	 *
 	 * @param array $pointA Array with 'latitude' and 'longitude' keys
 	 *
-	 * @return bool|\WP_Error Returns true on success, WP_Error on failure in WordPress
-	 * @throws InvalidArgumentException If coordinates are invalid in non-WordPress environment
+	 * @return bool|WP_Error Returns true on success, WP_Error on failure
 	 */
 	public function set_point_a( array $pointA ) {
 		$validation = $this->validate_coordinates( $pointA, 'Point A' );
-		if ( $validation !== true ) {
+		if ( is_wp_error( $validation ) ) {
 			return $validation;
 		}
 
@@ -123,12 +122,11 @@ class GeoDistance {
 	 *
 	 * @param array $pointB Array with 'latitude' and 'longitude' keys
 	 *
-	 * @return bool|\WP_Error Returns true on success, WP_Error on failure in WordPress
-	 * @throws InvalidArgumentException If coordinates are invalid in non-WordPress environment
+	 * @return bool|WP_Error Returns true on success, WP_Error on failure
 	 */
 	public function set_point_b( array $pointB ) {
 		$validation = $this->validate_coordinates( $pointB, 'Point B' );
-		if ( $validation !== true ) {
+		if ( is_wp_error( $validation ) ) {
 			return $validation;
 		}
 
@@ -169,12 +167,11 @@ class GeoDistance {
 	 *
 	 * @param string $unit Unit of measurement ('mi' or 'km')
 	 *
-	 * @return bool|\WP_Error Returns true on success, WP_Error on failure in WordPress
-	 * @throws InvalidArgumentException If unit is invalid in non-WordPress environment
+	 * @return bool|WP_Error Returns true on success, WP_Error on failure
 	 */
 	public function set_unit( string $unit ) {
 		$validation = $this->validate_unit( $unit );
-		if ( $validation !== true ) {
+		if ( is_wp_error( $validation ) ) {
 			return $validation;
 		}
 
@@ -186,9 +183,8 @@ class GeoDistance {
 	/**
 	 * Calculate the distance between the two points
 	 *
-	 * @return float|\WP_Error The distance in the specified unit, rounded to 2 decimal places,
-	 *                         or WP_Error in WordPress environment if there was an error
-	 * @throws InvalidArgumentException In non-WordPress environment if there was an error
+	 * @return float|WP_Error The distance in the specified unit, rounded to 2 decimal places,
+	 *                        or WP_Error if there was an error
 	 */
 	public function get_distance() {
 		try {
@@ -211,7 +207,7 @@ class GeoDistance {
 
 			return round( self::EARTH_RADIUS[ $this->unit ] * $c, 2 );
 		} catch ( \Exception $e ) {
-			return $this->handle_error( $e->getMessage(), 'calculation_error' );
+			return new WP_Error( 'calculation_error', $e->getMessage() );
 		}
 	}
 
@@ -221,13 +217,12 @@ class GeoDistance {
 	 * @param array $point  Array with 'latitude' and 'longitude' keys
 	 * @param float $radius Radius in the current unit of measurement
 	 *
-	 * @return bool|\WP_Error Whether the point is within the radius, or WP_Error on failure in WordPress
-	 * @throws InvalidArgumentException If coordinates are invalid in non-WordPress environment
+	 * @return bool|WP_Error Whether the point is within the radius, or WP_Error on failure
 	 */
-	public function is_within_radius( array $point, float $radius ): bool {
+	public function is_within_radius( array $point, float $radius ) {
 		// Validate the point coordinates
 		$validation = $this->validate_coordinates( $point, 'Target point' );
-		if ( $validation !== true ) {
+		if ( is_wp_error( $validation ) ) {
 			return $validation;
 		}
 
@@ -243,9 +238,9 @@ class GeoDistance {
 		// Restore original point B
 		$this->pointB = $originalPointB;
 
-		// If distance is a WP_Error, return false
+		// If distance is a WP_Error, return it
 		if ( is_wp_error( $distance ) ) {
-			return false;
+			return $distance;
 		}
 
 		return $distance <= $radius;
@@ -254,38 +249,22 @@ class GeoDistance {
 	/**
 	 * Get the last error if any
 	 *
-	 * @return \WP_Error|InvalidArgumentException|null
+	 * @return WP_Error|null
 	 */
 	public function get_last_error() {
 		return $this->last_error;
 	}
 
 	/**
-	 * Check if we're in a WordPress environment
-	 *
-	 * @return bool
-	 */
-	private function is_wordpress(): bool {
-		return function_exists( 'wp_error' ) && class_exists( 'WP_Error' );
-	}
-
-	/**
-	 * Handle errors based on environment
+	 * Handle errors
 	 *
 	 * @param string $message Error message
 	 * @param string $code    Error code
 	 *
-	 * @return \WP_Error|void Returns WP_Error in WordPress environment
-	 * @throws InvalidArgumentException In non-WordPress environment
+	 * @return WP_Error
 	 */
-	private function handle_error( string $message, string $code = 'invalid_argument' ) {
-		$this->last_error = $this->is_wordpress()
-			? new \WP_Error( $code, $message )
-			: new InvalidArgumentException( $message );
-
-		if ( ! $this->is_wordpress() ) {
-			throw $this->last_error;
-		}
+	private function handle_error( string $message, string $code = 'invalid_argument' ): WP_Error {
+		$this->last_error = new WP_Error( $code, $message );
 
 		return $this->last_error;
 	}
@@ -296,8 +275,7 @@ class GeoDistance {
 	 * @param array  $point     Coordinate array to validate
 	 * @param string $pointName Name of the point for error messages
 	 *
-	 * @return bool|\WP_Error Returns true if valid, WP_Error in WordPress if invalid
-	 * @throws InvalidArgumentException In non-WordPress environment if invalid
+	 * @return true|WP_Error Returns true if valid, WP_Error if invalid
 	 */
 	private function validate_coordinates( array $point, string $pointName ) {
 		if ( ! isset( $point['latitude'] ) || ! isset( $point['longitude'] ) ) {
@@ -332,8 +310,7 @@ class GeoDistance {
 	 *
 	 * @param string $unit Unit to validate
 	 *
-	 * @return bool|\WP_Error Returns true if valid, WP_Error in WordPress if invalid
-	 * @throws InvalidArgumentException In non-WordPress environment if invalid
+	 * @return true|WP_Error Returns true if valid, WP_Error if invalid
 	 */
 	private function validate_unit( string $unit ) {
 		if ( ! array_key_exists( $unit, self::EARTH_RADIUS ) ) {
@@ -345,4 +322,5 @@ class GeoDistance {
 
 		return true;
 	}
+
 }
